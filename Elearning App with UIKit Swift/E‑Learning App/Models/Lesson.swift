@@ -8,12 +8,12 @@
 import Foundation
 
 struct Lesson: Identifiable, Codable {
-    let id: UUID = UUID()
+    var id: UUID = UUID()
     let title: String
     let content: String
     let duration: Int // in minutes
     let lessonType: LessonType
-    let isCompleted: Bool = false
+    var isCompleted: Bool = false
     let videoURL: String?
     let resources: [LessonResource]
     
@@ -35,7 +35,7 @@ struct Lesson: Identifiable, Codable {
 }
 
 struct LessonResource: Identifiable, Codable {
-    let id: UUID = UUID()
+    var id: UUID = UUID()
     let title: String
     let url: String
     let type: ResourceType

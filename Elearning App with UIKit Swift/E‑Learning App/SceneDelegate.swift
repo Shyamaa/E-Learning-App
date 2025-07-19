@@ -16,6 +16,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         window = UIWindow(windowScene: windowScene)
         
+        // Apply saved theme
+        ThemeManager.shared.applyCurrentTheme()
+        
         // Check if user is logged in
         let isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
         

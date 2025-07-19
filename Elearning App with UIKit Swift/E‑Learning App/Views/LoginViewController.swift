@@ -20,6 +20,7 @@ class LoginViewController: UIViewController {
     private let passwordField = UITextField()
     private let loginButton = UIButton(type: .system)
     private let forgotPasswordButton = UIButton(type: .system)
+    private let signUpButton = UIButton(type: .system)
     private let statusLabel = UILabel()
     private let spinner = UIActivityIndicatorView(style: .medium)
     private let demoCredentialsView = UIView()
@@ -156,6 +157,14 @@ class LoginViewController: UIViewController {
         forgotPasswordButton.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(forgotPasswordButton)
         
+        // Sign up button
+        signUpButton.setTitle("Don't have an account? Sign Up", for: .normal)
+        signUpButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        signUpButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .normal)
+        signUpButton.addTarget(self, action: #selector(signUpTapped), for: .touchUpInside)
+        signUpButton.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(signUpButton)
+        
         // Status label
         statusLabel.textAlignment = .center
         statusLabel.font = UIFont.systemFont(ofSize: 14)
@@ -268,8 +277,12 @@ class LoginViewController: UIViewController {
             forgotPasswordButton.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 16),
             forgotPasswordButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
+            // Sign up button
+            signUpButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 16),
+            signUpButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            
             // Status label
-            statusLabel.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 16),
+            statusLabel.topAnchor.constraint(equalTo: signUpButton.bottomAnchor, constant: 16),
             statusLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
             statusLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
             
@@ -317,13 +330,13 @@ class LoginViewController: UIViewController {
     }
     
     @objc private func forgotPasswordTapped() {
-        let email = emailField.text ?? ""
-        if email.isEmpty {
-            statusLabel.textColor = .systemRed
-            statusLabel.text = "Please enter your email first"
-            return
-        }
-        viewModel.forgotPassword(email: email)
+        let forgotPasswordVC = ForgotPasswordViewController()
+        navigationController?.pushViewController(forgotPasswordVC, animated: true)
+    }
+    
+    @objc private func signUpTapped() {
+        let signUpVC = SignUpViewController()
+        navigationController?.pushViewController(signUpVC, animated: true)
     }
 }
 

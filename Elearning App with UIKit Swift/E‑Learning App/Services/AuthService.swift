@@ -18,7 +18,7 @@ class MockAuthService: AuthService {
         DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
             if user.email == "student@example.com" && user.password == "learning123" {
                 // Return the user with updated last login date
-                var updatedUser = user
+                let updatedUser = user
                 // In a real app, you'd update the lastLoginDate here
                 completion(.success(updatedUser))
             } else {
