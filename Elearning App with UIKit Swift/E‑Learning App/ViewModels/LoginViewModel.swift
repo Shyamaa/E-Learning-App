@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 class LoginViewModel {
     var email: String = ""
@@ -18,11 +19,10 @@ class LoginViewModel {
     var onError: ((String) -> Void)?
     var onLogout: (() -> Void)?
     
-    private let authService: AuthService
+    private let firebaseService = FirebaseService.shared
     private let userDefaults = UserDefaults.standard
     
-    init(authService: AuthService = MockAuthService()) {
-        self.authService = authService
+    init() {
         setupSavedEmail()
     }
     
@@ -48,54 +48,25 @@ class LoginViewModel {
         
         onLoading?(true)
         
-        let user = User(
-            email: email,
-            password: password,
-            firstName: "John",
-            lastName: "Doe",
-            profileImageURL: nil,
-            joinDate: Date(),
-            lastLoginDate: Date(),
-            preferences: User.UserPreferences(
-                notificationsEnabled: true,
-                darkModeEnabled: false,
-                autoPlayVideos: true,
-                downloadOverWifiOnly: true,
-                language: "en"
-            ),
-            progress: User.UserProgress(
-                completedCourses: 2,
-                totalCourses: 5,
-                totalStudyTime: 180,
-                currentStreak: 7,
-                achievements: [
-                    User.Achievement(
-                        title: "First Course",
-                        description: "Completed your first course",
-                        icon: "star.fill",
-                        dateEarned: Date().addingTimeInterval(-86400 * 7),
-                        type: .firstCourse
-                    ),
-                    User.Achievement(
-                        title: "Week Streak",
-                        description: "Studied for 7 days in a row",
-                        icon: "flame.fill",
-                        dateEarned: Date(),
-                        type: .weekStreak
-                    )
-                ]
-            )
-        )
-        
-        authService.login(user: user) { [weak self] result in
+        firebaseService.signIn(email: email, password: password) { [weak self] result in
             DispatchQueue.main.async {
                 self?.onLoading?(false)
                 switch result {
-                case .success(let user):
-                    self?.currentUser = user
-                    self?.userDefaults.set(email, forKey: "userEmail")
-                    self?.userDefaults.set(true, forKey: "isLoggedIn")
-                    self?.onLoginSuccess?()
+                case .success(let firebaseUser):
+                    // Convert Firebase user to app user
+                    self?.firebaseService.convertToAppUser(firebaseUser: firebaseUser) { appUserResult in
+                        DispatchQueue.main.async {
+                            switch appUserResult {
+                            case .success(let appUser):
+                                self?.currentUser = appUser
+                                self?.userDefaults.set(email, forKey: "userEmail")
+                                self?.userDefaults.set(true, forKey: "isLoggedIn")
+                                self?.onLoginSuccess?()
+                            case .failure(let error):
+                                self?.onError?(error.localizedDescription)
+                            }
+                        }
+                    }
                 case .failure(let error):
                     self?.onError?(error.localizedDescription)
                 }
@@ -104,17 +75,23 @@ class LoginViewModel {
     }
     
     func logout() {
-        authService.logout { [weak self] _ in
+        do {
+            try firebaseService.signOut()
             DispatchQueue.main.async {
-                self?.currentUser = nil
-                self?.userDefaults.set(false, forKey: "isLoggedIn")
-                self?.onLogout?()
+                self.currentUser = nil
+                self.userDefaults.set(false, forKey: "isLoggedIn")
+                self.userDefaults.removeObject(forKey: "userEmail")
+                self.onLogout?()
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.onError?(error.localizedDescription)
             }
         }
     }
     
     func forgotPassword(email: String) {
-        authService.forgotPassword(email: email) { [weak self] result in
+        firebaseService.resetPassword(email: email) { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:
